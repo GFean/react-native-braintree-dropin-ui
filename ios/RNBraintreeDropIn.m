@@ -1,7 +1,7 @@
 #import "RNBraintreeDropIn.h"
 #import <React/RCTUtils.h>
 #import "BTThreeDSecureRequest.h"
-
+#import "BraintreePayPal.h"
 @implementation RNBraintreeDropIn
 
 - (dispatch_queue_t)methodQueue
@@ -100,7 +100,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
     }else{
         request.applePayDisabled = YES;
     }
-
+    if([options[@"shippingAddressRequired"] boolValue]){
+       request.payPalRequest = [[BTPayPalRequest alloc] init];
+       request.payPalRequest.shippingAddressRequired = YES;
+   }
     BTDropInController *dropIn = [[BTDropInController alloc] initWithAuthorization:clientToken request:request handler:^(BTDropInController * _Nonnull controller, BTDropInResult * _Nullable result, NSError * _Nullable error) {
             [self.reactRoot dismissViewControllerAnimated:YES completion:nil];
 
@@ -193,7 +196,19 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
     [jsResult setObject:result.paymentDescription forKey:@"description"];
     [jsResult setObject:[NSNumber numberWithBool:result.paymentMethod.isDefault] forKey:@"isDefault"];
     [jsResult setObject:deviceDataCollector forKey:@"deviceData"];
-
+    if([result.paymentMethod isKindOfClass:[BTPayPalAccountNonce class]]) {
+       BTPostalAddress *postalAddress = ((BTPayPalAccountNonce *) result.paymentMethod).shippingAddress;
+       NSMutableDictionary *addressDictionary = [[NSMutableDictionary alloc] init];
+       addressDictionary[@"recipientName"] = postalAddress.recipientName;
+       addressDictionary[@"streetAddress"] = postalAddress.streetAddress;
+       addressDictionary[@"extendedAddress"] = postalAddress.extendedAddress;
+       addressDictionary[@"locality"] = postalAddress.locality;
+       addressDictionary[@"countryCodeAlpha2"] = postalAddress.countryCodeAlpha2;
+       addressDictionary[@"postalCode"] = postalAddress.postalCode;
+       addressDictionary[@"region"] = postalAddress.region;
+       [jsResult setObject:addressDictionary forKey:@"shippingAddress"];
+         NSLog(@"%@", ((BTPayPalAccountNonce *) result.paymentMethod).shippingAddress);
+     }
     resolve(jsResult);
 }
 
@@ -211,3 +226,4 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
 }
 
 @end
+
