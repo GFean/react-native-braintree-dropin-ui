@@ -68,6 +68,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
         request.vaultManager = YES;
     }
 
+    if(![options[@"payPal"] boolValue]){ //disable paypal
+        request.paypalDisabled = YES;
+    }
+
     if([options[@"cardDisabled"] boolValue]){
         request.cardDisabled = YES;
     }

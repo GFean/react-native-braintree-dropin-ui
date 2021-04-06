@@ -73,7 +73,12 @@ public class RNBraintreeDropInModule extends ReactContextBaseJavaModule {
               .shippingAddressRequired(true).shippingAddressEditable(true);
       dropInRequest.paypalRequest(payPalPaymentRequest);
     }
-    if(options.hasKey("cardDisabled")) {
+     if(!options.getBoolean("payPal")){ 
+    //disable paypal 
+     dropInRequest.disablePayPal(); 
+      }
+
+    if(options.getBoolean("cardDisabled")) {
       dropInRequest.disableCard();
     }
     if (options.hasKey("threeDSecure")) {
