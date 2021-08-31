@@ -33,6 +33,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
     self.resolve = resolve;
     self.reject = reject;
     self.applePayAuthorized = NO;
+    
 
     NSString* clientToken = options[@"clientToken"];
     if (!clientToken) {
@@ -67,7 +68,10 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
     if([options[@"vaultManager"] boolValue]){
         request.vaultManager = YES;
     }
-
+    
+    if(![options[@"savePaymentDetails"]boolValue]){
+        request.vaultCard = NO;
+    }
     if(![options[@"payPal"] boolValue]){ //disable paypal
         request.paypalDisabled = YES;
     }
@@ -87,12 +91,13 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
             return;
         }
         self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:clientToken];
-
+        
         self.paymentRequest = [[PKPaymentRequest alloc] init];
         self.paymentRequest.merchantIdentifier = merchantIdentifier;
         self.paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
         self.paymentRequest.countryCode = countryCode;
         self.paymentRequest.currencyCode = currencyCode;
+        
         self.paymentRequest.supportedNetworks = @[PKPaymentNetworkAmex, PKPaymentNetworkVisa, PKPaymentNetworkMasterCard, PKPaymentNetworkDiscover, PKPaymentNetworkChinaUnionPay];
         self.paymentRequest.paymentSummaryItems =
             @[
@@ -188,7 +193,7 @@ RCT_EXPORT_METHOD(show:(NSDictionary*)options resolver:(RCTPromiseResolveBlock)r
 }
 
 + (void)resolvePayment:(BTDropInResult* _Nullable)result deviceData:(NSString * _Nonnull)deviceDataCollector resolver:(RCTPromiseResolveBlock _Nonnull)resolve {
-    //NSLog(@"result = %@", result);
+    NSLog(@"result = %@", result);
 
     NSMutableDictionary* jsResult = [NSMutableDictionary new];
 
